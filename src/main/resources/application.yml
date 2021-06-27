@@ -1,0 +1,18 @@
+server:
+  port: 8080
+
+jwt:
+  expiration_time: 86400000 #하루 기준(밀리세컨 x1000)
+  secret: user_token
+
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  h2:
+    console:
+      enabled: true
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:testdb
