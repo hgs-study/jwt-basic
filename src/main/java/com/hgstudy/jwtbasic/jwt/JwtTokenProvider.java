@@ -1,10 +1,7 @@
 package com.hgstudy.jwtbasic.jwt;
 
 import com.hgstudy.jwtbasic.user.application.UserService;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -35,8 +32,8 @@ public class JwtTokenProvider {
     }
 
     // JWT 토큰 생성
-    public String createToken(String userPk, List<String> roles) {
-        Claims claims = Jwts.claims().setSubject(userPk); // JWT payload 에 저장되는 정보단위
+    public String createToken(String userId, List<String> roles) {
+        Claims claims = Jwts.claims().setSubject(userId); // JWT payload 에 저장되는 정보단위
         claims.put("roles", roles); // 정보는 key / value 쌍으로 저장된다.
         Date now = new Date();
 
@@ -79,20 +76,26 @@ public class JwtTokenProvider {
     // 토큰의 유효성 + 만료일자 확인
     public boolean validateToken(String jwtToken) {
         try {
-            //log.debug("jwtToken before: "+jwtToken);
-            //jwtToken = jwtToken.replace(JwtProperties.TOKEN_PREFIX,"");
-            log.debug("jwtToken after: "+jwtToken);
+            System.out.println("jwtToken.length() = " + jwtToken.length());
             Jws<Claims> claims = Jwts.parser()
                                      .setSigningKey(secretKey)
                                      .parseClaimsJws(jwtToken);
 
-            if(false == !claims.getBody().getExpiration().before(new Date()))
-                System.out.println("만료된 토큰입니다.");
             return !claims.getBody().getExpiration().before(new Date());
-        } catch (Exception e) {
-            return false;
+        } catch (SecurityException | MalformedJwtException e) {
+            e.printStackTrace();
+            log.error("잘못된 형식의 토큰");
+        } catch (ExpiredJwtException e) {
+            log.error(e.getMessage());
+            log.error("만료된 토큰");
+        } catch (UnsupportedJwtException e) {
+            log.error(e.getMessage());
+            log.error("지원되지 않는 Jwt 형식");
+        } catch (IllegalArgumentException e) {
+            log.error(e.getMessage());
+            log.error("잘못된 토큰");
         }
+
+        return false;
     }
-
-
 }
