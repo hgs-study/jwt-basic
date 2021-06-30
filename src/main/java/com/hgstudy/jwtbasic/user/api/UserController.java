@@ -5,9 +5,7 @@ import com.hgstudy.jwtbasic.user.application.UserRepository;
 import com.hgstudy.jwtbasic.user.form.UserForm.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import com.hgstudy.jwtbasic.user.entity.User;
 
 import java.util.Collections;
@@ -23,14 +21,38 @@ public class UserController {
 
     // 회원가입
     @PostMapping("/join")
-    public Long join(@RequestBody Request.SignUp signUp) {
+    public String join(@RequestBody Request.SignUp signUp) {
         return userRepository.save(User.builder()
                                         .email(signUp.getEmail())
                                         .userId(UUID.randomUUID().toString())
                                         .password(passwordEncoder.encode(signUp.getPassword()))
                                         .roles(Collections.singletonList("ROLE_USER")) // 최초 가입시 USER 로 설정
                                         .build())
-                             .getId();
+                                        .getUserId();
+    }
+
+    // 회원가입
+    @PostMapping("/join/admin")
+    public String adminJoin(@RequestBody Request.SignUp signUp) {
+        return userRepository.save(User.builder()
+                                        .email(signUp.getEmail())
+                                        .userId(UUID.randomUUID().toString())
+                                        .password(passwordEncoder.encode(signUp.getPassword()))
+                                        .roles(Collections.singletonList("ROLE_ADMIN")) // 최초 가입시 ADMIN 로 설정
+                                        .build())
+                                        .getUserId();
+    }
+
+    @GetMapping("/admin/{test}")
+    public String adminTest(@PathVariable String test){
+
+        return test;
+    }
+    @GetMapping("/user/{userId}")
+    public User getUser(@PathVariable String userId){
+
+        return userRepository.findByEmail(userId)
+                                .orElseThrow(()-> new IllegalArgumentException("해당 아이디가 없습니다."));
     }
 
     // 로그인

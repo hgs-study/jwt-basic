@@ -1,16 +1,17 @@
 package com.hgstudy.jwtbasic.jwt;
 
+import com.hgstudy.jwtbasic.user.application.UserService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
@@ -20,11 +21,12 @@ import java.util.List;
 
 @RequiredArgsConstructor
 @Component
+@Slf4j
 public class JwtTokenProvider {
 
     private String secretKey = JwtProperties.SECRET;
 
-    private final UserDetailsService userDetailsService;
+    private final UserService userService;
 
     //객체 초기화, secretKey를 base64로 인코딩한다.
     @PostConstruct
@@ -49,12 +51,13 @@ public class JwtTokenProvider {
 
     // JWT 토큰에서 인증 정보 조회
     public Authentication getAuthentication(String token) {
-        UserDetails userDetails = userDetailsService.loadUserByUsername(this.getUserPk(token));
+        UserDetails userDetails = userService.findByUserId(this.getUserPk(token));
         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
     }
 
     // 토큰에서 회원 정보 추출
     public String getUserPk(String token) {
+        log.debug("secretKey :"+ secretKey);
         return Jwts.parser()
                     .setSigningKey(secretKey)
                     .parseClaimsJws(token)
@@ -62,17 +65,29 @@ public class JwtTokenProvider {
                     .getSubject();
     }
 
-    // Request의 Header에서 token 값을 가져옵니다. "X-AUTH-TOKEN" : "TOKEN값'
+    // Request의 Header에서 token 값을 가져옵니다. "Authorization" : "TOKEN값'
     public String resolveToken(HttpServletRequest request) {
-        return request.getHeader(JwtProperties.HEADER_NAME);
+        String token = request.getHeader(JwtProperties.REQUEST_HEADER_NAME);
+        if (StringUtils.hasText(token) && token.startsWith(JwtProperties.TOKEN_PREFIX)) {
+            token = token.replace(JwtProperties.TOKEN_PREFIX,"");
+            log.debug("token : "+token);
+        }
+        return token;
+//        return request.getHeader(JwtProperties.REQUEST_HEADER_NAME);
     }
 
     // 토큰의 유효성 + 만료일자 확인
     public boolean validateToken(String jwtToken) {
         try {
+            //log.debug("jwtToken before: "+jwtToken);
+            //jwtToken = jwtToken.replace(JwtProperties.TOKEN_PREFIX,"");
+            log.debug("jwtToken after: "+jwtToken);
             Jws<Claims> claims = Jwts.parser()
-                                    .setSigningKey(secretKey)
-                                    .parseClaimsJws(jwtToken);
+                                     .setSigningKey(secretKey)
+                                     .parseClaimsJws(jwtToken);
+
+            if(false == !claims.getBody().getExpiration().before(new Date()))
+                System.out.println("만료된 토큰입니다.");
             return !claims.getBody().getExpiration().before(new Date());
         } catch (Exception e) {
             return false;

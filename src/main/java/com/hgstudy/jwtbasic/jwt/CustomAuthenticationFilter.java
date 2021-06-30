@@ -1,9 +1,9 @@
 package com.hgstudy.jwtbasic.jwt;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.filter.GenericFilterBean;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
@@ -15,6 +15,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 @RequiredArgsConstructor
+@Slf4j
 public class CustomAuthenticationFilter extends OncePerRequestFilter {
 
 
@@ -22,10 +23,10 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
-        System.out.println("doFilterInternal");
+        log.debug("[OncePerRequestFilter] doFilterInternal start");
         // 헤더에서 JWT 를 받아옵니다.
         String token = jwtTokenProvider.resolveToken((HttpServletRequest) request);
-
+        log.debug("token = " + token);
 
         if (isValidJwt(token)) { // 유효한 토큰인지 확인합니다.
             System.out.println("성공");
@@ -51,7 +52,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
 //    }
 
     private boolean isValidJwt(String token) {
-        System.out.println("token = " + token);
+        log.debug("token = " + token);
         return token != null && jwtTokenProvider.validateToken(token);
     }
 
