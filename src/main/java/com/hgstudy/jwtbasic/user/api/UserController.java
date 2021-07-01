@@ -26,7 +26,7 @@ public class UserController {
                                         .email(signUp.getEmail())
                                         .userId(UUID.randomUUID().toString())
                                         .password(passwordEncoder.encode(signUp.getPassword()))
-                                        .roles(Collections.singletonList("ROLE_USER")) // 최초 가입시 USER 로 설정
+                                        .roles(Collections.singletonList("ROLE_ADMIN")) // 최초 가입시 USER 로 설정
                                         .build())
                                         .getUserId();
     }
@@ -43,13 +43,20 @@ public class UserController {
                                         .getUserId();
     }
 
-    @GetMapping("/admin/{test}")
-    public String adminTest(@PathVariable String test){
-
-        return test;
-    }
+//    @GetMapping("/admin/{test}")
+//    public String adminTest(@PathVariable String test){
+//
+//        return test;
+//    }
     @GetMapping("/user/{userId}")
     public User getUser(@PathVariable String userId){
+
+        return userRepository.findByEmail(userId)
+                                .orElseThrow(()-> new IllegalArgumentException("해당 아이디가 없습니다."));
+    }
+
+    @GetMapping("/admin/{userId}")
+    public User getAdmin(@PathVariable String userId){
 
         return userRepository.findByEmail(userId)
                                 .orElseThrow(()-> new IllegalArgumentException("해당 아이디가 없습니다."));

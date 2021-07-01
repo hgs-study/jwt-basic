@@ -1,6 +1,7 @@
 package com.hgstudy.jwtbasic.jwt;
 
 import com.hgstudy.jwtbasic.user.application.UserService;
+import com.hgstudy.jwtbasic.user.entity.User;
 import io.jsonwebtoken.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,7 @@ public class JwtTokenProvider {
 
     // JWT 토큰 생성
     public String createToken(String userId, List<String> roles) {
+        log.debug("=========createToken start ======");
         Claims claims = Jwts.claims().setSubject(userId); // JWT payload 에 저장되는 정보단위
         claims.put("roles", roles); // 정보는 key / value 쌍으로 저장된다.
         Date now = new Date();
@@ -48,12 +50,14 @@ public class JwtTokenProvider {
 
     // JWT 토큰에서 인증 정보 조회
     public Authentication getAuthentication(String token) {
+        log.debug("=========getAuthentication start ======");
         UserDetails userDetails = userService.findByUserId(this.getUserPk(token));
         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
     }
 
     // 토큰에서 회원 정보 추출
     public String getUserPk(String token) {
+        log.debug("=========getUserPk start ======");
         log.debug("secretKey :"+ secretKey);
         return Jwts.parser()
                     .setSigningKey(secretKey)
@@ -64,9 +68,12 @@ public class JwtTokenProvider {
 
     // Request의 Header에서 token 값을 가져옵니다. "Authorization" : "TOKEN값'
     public String resolveToken(HttpServletRequest request) {
+        log.debug("=========resolveToken start ======");
+
         String token = request.getHeader(JwtProperties.REQUEST_HEADER_NAME);
         if (StringUtils.hasText(token) && token.startsWith(JwtProperties.TOKEN_PREFIX)) {
             token = token.replace(JwtProperties.TOKEN_PREFIX,"");
+
             log.debug("token : "+token);
         }
         return token;
@@ -75,6 +82,7 @@ public class JwtTokenProvider {
 
     // 토큰의 유효성 + 만료일자 확인
     public boolean validateToken(String jwtToken) {
+        log.debug("=========validateToken start ======");
         try {
             System.out.println("jwtToken.length() = " + jwtToken.length());
             Jws<Claims> claims = Jwts.parser()
@@ -82,18 +90,18 @@ public class JwtTokenProvider {
                                      .parseClaimsJws(jwtToken);
 
             return !claims.getBody().getExpiration().before(new Date());
-        } catch (SecurityException | MalformedJwtException e) {
+        } catch (SecurityException | MalformedJwtException | SignatureException e) {
             e.printStackTrace();
-            log.error("잘못된 형식의 토큰");
+            log.error("=== 잘못된 형식의 토큰 ===");
         } catch (ExpiredJwtException e) {
             log.error(e.getMessage());
-            log.error("만료된 토큰");
+            log.error("=== 만료된 토큰 ===");
         } catch (UnsupportedJwtException e) {
             log.error(e.getMessage());
-            log.error("지원되지 않는 Jwt 형식");
+            log.error("=== 지원되지 않는 Jwt 형식 ===");
         } catch (IllegalArgumentException e) {
             log.error(e.getMessage());
-            log.error("잘못된 토큰");
+            log.error("=== 잘못된 토큰 ===");
         }
 
         return false;

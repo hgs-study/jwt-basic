@@ -52,7 +52,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
 //    }
 
     private boolean isValidJwt(String token) {
-        log.debug("token = " + token);
+        log.debug("====== isValidJwt start======");
         return token != null && jwtTokenProvider.validateToken(token);
     }
 
