@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import com.hgstudy.jwtbasic.user.entity.User;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 
@@ -22,6 +23,7 @@ public class UserController {
     // 회원가입
     @PostMapping("/join")
     public String join(@RequestBody Request.SignUp signUp) {
+        System.out.println("new Date() = " + new Date());
         return userRepository.save(User.builder()
                                         .email(signUp.getEmail())
                                         .userId(UUID.randomUUID().toString())
@@ -60,6 +62,12 @@ public class UserController {
 
         return userRepository.findByEmail(userId)
                                 .orElseThrow(()-> new IllegalArgumentException("해당 아이디가 없습니다."));
+    }
+
+    @GetMapping("/admin/time")
+    public Date getTime(){
+
+        return new Date();
     }
 
     // 로그인

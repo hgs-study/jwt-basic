@@ -19,7 +19,11 @@ spring:
   output:
     ansi:
       enabled: always
-
+  cache:
+    type: redis
+  redis:
+    host: localhost
+    port: 6379
 
 
 logging:
