@@ -35,6 +35,8 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
         log.debug("===== [OncePerRequestFilter] doFilterInternal start =====");
         final Cookie jwtToken = cookieUtil.getCookie(request, JwtProperties.ACCESS_TOKEN_NAME);
+        final Cookie refreshJwtToken = cookieUtil.getCookie(request, JwtProperties.REFRESH_TOKEN_NAME);
+        String accessToken = jwtTokenProvider.resolveToken(request);
 
         String userKey = null;
         String jwt = null;
@@ -42,19 +44,78 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         String refreshUserKey = null;
 
         try{
-            log.debug("00000");
-            log.debug("jwtToken :"+ jwtToken);
-            if(jwtToken != null){
-                log.debug("1111111");
-                jwt = jwtToken.getValue();
-                userKey = jwtTokenProvider.getUserKeyByToken(jwt);
+//            log.debug("00000");
+//            log.debug("jwtToken :"+ jwtToken);
+//            log.debug("jwtToken.getValue() :"+ jwtToken.getValue());
+//            log.debug("refreshJwtToken :"+ refreshJwtToken);
+//            log.debug("refreshJwtToken.getValue() :"+ refreshJwtToken.getValue());
+            log.debug("0.3 0.3 0.3 0.3");
+//            jwtTokenProvider.validateToken(accessToken);
+//            if(accessToken == null){
+//                log.debug("0.4 0.4 0.4 0.4");
+//                if(refreshJwtToken != null){
+//                    log.debug("0.5 0.5 0.5 0.5");
+//                    refreshJwt = refreshJwtToken.getValue();
+//                    log.debug("refreshJwtToken.getValue() : "+refreshJwtToken.getValue());
+//                }
+//            }
+
+
+//            if(jwtToken != null){
+//                log.debug("1111111");
+//                jwt = jwtToken.getValue();
+//                userKey = jwtTokenProvider.getUserKeyByToken(jwt);
+//            }
+
+
+            if(accessToken != null){
+                userKey = jwtTokenProvider.getUserKeyByToken(accessToken);
             }
+//            else{
+//                log.debug("1.1 1.1 1.1 1.1");
+//                if(refreshJwtToken != null){
+//                    log.debug("1.2 1.2 1.2 1.2 ");
+//                    refreshUserKey = redisUtil.getData(refreshJwt);
+//                    log.debug("refreshUserKey :"+refreshUserKey);
+//                    log.debug("redisUtil.getData(refreshJwt) :"+redisUtil.getData(refreshJwt));
+//                    log.debug("jwtTokenProvider.getUserKeyByToken(refreshJwt) :"+jwtTokenProvider.getUserKeyByToken(refreshJwt));
+//
+//                    if(refreshUserKey.equals(jwtTokenProvider.getUserKeyByToken(refreshJwt))){
+//                        log.debug("8888");
+//
+//                        UserDetails userDetails = userService.findUserDetailsByUserKey(refreshUserKey);
+//                        UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(userDetails,null,userDetails.getAuthorities());
+//                        usernamePasswordAuthenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+//                        SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
+//
+//                        User user = userService.findByUserKey(refreshUserKey);
+//                        String newToken =jwtTokenProvider.createToken(user.getUserKey(),
+//                                user.getRoles(),
+//                                JwtProperties.ACCESS_TOKEN_EXPIRATION_TIME);
+//                        Cookie newAccessToken = cookieUtil.createCookie(JwtProperties.ACCESS_TOKEN_NAME, newToken, JwtProperties.ACCESS_TOKEN_EXPIRATION_TIME);
+//                        log.debug("newToken : "+newToken);
+//                        response.addCookie(newAccessToken);
+//                    }
+//                }
+//            }
+
+//            if(userKey != null){
+//                log.debug("222222");
+//                UserDetails userDetails = userService.findUserDetailsByUserKey(userKey);
+//
+//                if(isValidJwt(jwt)){
+//                    log.debug("3333333");
+//                    UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(userDetails,null,userDetails.getAuthorities());
+//                    usernamePasswordAuthenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+//                    SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
+//                }
+
 
             if(userKey != null){
                 log.debug("222222");
                 UserDetails userDetails = userService.findUserDetailsByUserKey(userKey);
 
-                if(isValidJwt(jwt)){
+                if(isValidJwt(accessToken)){
                     log.debug("3333333");
                     UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(userDetails,null,userDetails.getAuthorities());
                     usernamePasswordAuthenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
@@ -78,6 +139,9 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
             if(refreshJwt != null){
                 log.debug("777777");
                 refreshUserKey = redisUtil.getData(refreshJwt);
+                log.debug("refreshUserKey :"+refreshUserKey);
+                log.debug("redisUtil.getData(refreshJwt) :"+redisUtil.getData(refreshJwt));
+                log.debug("jwtTokenProvider.getUserKeyByToken(refreshJwt) :"+jwtTokenProvider.getUserKeyByToken(refreshJwt));
 
                 if(refreshUserKey.equals(jwtTokenProvider.getUserKeyByToken(refreshJwt))){
                     log.debug("8888");
@@ -91,8 +155,8 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
                     String newToken =jwtTokenProvider.createToken(user.getUserKey(),
                                                                   user.getRoles(),
                                                                   JwtProperties.ACCESS_TOKEN_EXPIRATION_TIME);
-                    Cookie newAccessToken = cookieUtil.createCookie(JwtProperties.ACCESS_TOKEN_NAME, newToken);
-
+                    Cookie newAccessToken = cookieUtil.createCookie(JwtProperties.ACCESS_TOKEN_NAME, newToken, JwtProperties.ACCESS_TOKEN_EXPIRATION_TIME);
+                    log.debug("newToken : "+newToken);
                     response.addCookie(newAccessToken);
                 }
             }

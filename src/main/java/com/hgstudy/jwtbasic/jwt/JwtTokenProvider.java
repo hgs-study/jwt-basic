@@ -83,10 +83,15 @@ public class JwtTokenProvider {
     public boolean validateToken(String jwtToken) {
         log.debug("=========validateToken start ======");
         try {
-            log.debug("jwtToken.length() = " + jwtToken.length());
+
             Jws<Claims> claims = Jwts.parser()
                                      .setSigningKey(secretKey)
                                      .parseClaimsJws(jwtToken);
+
+            log.debug("claims.getBody().getExpiration() :"+ claims.getBody().getExpiration());
+            log.debug("new Date() :"+ new Date());
+            log.debug("claims.getBody().getExpiration().before(new Date() :"+ claims.getBody().getExpiration().before(new Date()));
+            log.debug("!claims.getBody().getExpiration().before(new Date() :"+ !claims.getBody().getExpiration().before(new Date()));
 
             return !claims.getBody().getExpiration().before(new Date());
         } catch (SecurityException | MalformedJwtException | SignatureException e) {

@@ -85,10 +85,10 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         System.out.println("JwtProperties.REFRESH_TOKEN_EXPIRATION_TIME = " + REFRESH_TOKEN_EXPIRATION_TIME);
         final String refreshToken = jwtTokenProvider.createToken(member.getUserKey(), member.getRoles(), REFRESH_TOKEN_EXPIRATION_TIME);
 
-        final Cookie accessTokenCookie = cookieUtil.createCookie(ACCESS_TOKEN_NAME, accessToken);
-        final Cookie refreshTokenCookie = cookieUtil.createCookie(REFRESH_TOKEN_NAME, refreshToken);
+        final Cookie accessTokenCookie = cookieUtil.createCookie(ACCESS_TOKEN_NAME, accessToken, ACCESS_TOKEN_EXPIRATION_TIME);
+        final Cookie refreshTokenCookie = cookieUtil.createCookie(REFRESH_TOKEN_NAME, refreshToken, REFRESH_TOKEN_EXPIRATION_TIME);
 
-        redisUtil.setDataExpire(refreshToken, email, JwtProperties.REFRESH_TOKEN_EXPIRATION_TIME);
+        redisUtil.setDataExpire(refreshToken, member.getUserKey() , JwtProperties.REFRESH_TOKEN_EXPIRATION_TIME);
 
         response.addCookie(accessTokenCookie);
         response.addCookie(refreshTokenCookie);

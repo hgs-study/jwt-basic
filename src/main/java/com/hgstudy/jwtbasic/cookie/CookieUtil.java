@@ -17,12 +17,12 @@ public class CookieUtil {
     private String activeProfile;
     private static final String LOCAL_PROFILE = "local";
 
-    public Cookie createCookie(String cookieName, String value){
+    public Cookie createCookie(String cookieName, String value, long expireTime){
         log.debug("===== createCookie start =======");
 
         Cookie token = new Cookie(cookieName,value);
         token.setHttpOnly(true);
-        token.setMaxAge( (int) (JwtProperties.ACCESS_TOKEN_EXPIRATION_TIME / 1000L));
+        token.setMaxAge( (int) (expireTime / 1000L));
         token.setPath("/");
         token = setSecureWhenIsNotLocalProfile(token);
 
