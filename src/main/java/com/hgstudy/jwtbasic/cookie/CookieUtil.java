@@ -1,6 +1,8 @@
 package com.hgstudy.jwtbasic.cookie;
 
 import com.hgstudy.jwtbasic.jwt.JwtProperties;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.Cookie;
@@ -8,23 +10,38 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
 
 @Component
+@Slf4j
 public class CookieUtil {
+
+    @Value("${spring.profiles.active}")
+    private String activeProfile;
+    private static final String LOCAL_PROFILE = "local";
+
     public Cookie createCookie(String cookieName, String value){
-        System.out.println("(int) (JwtProperties.ACCESS_TOKEN_EXPIRATION_TIME)111 = " + (int) (JwtProperties.ACCESS_TOKEN_EXPIRATION_TIME));
-        System.out.println("(int) (JwtProperties.ACCESS_TOKEN_EXPIRATION_TIME) 222= " + (int) (JwtProperties.ACCESS_TOKEN_EXPIRATION_TIME/ 1000L));
-        System.out.println("(int) (JwtProperties.ACCESS_TOKEN_EXPIRATION_TIME) 333= " + (JwtProperties.ACCESS_TOKEN_EXPIRATION_TIME/ 1000L));
-        System.out.println("new Date().getTime() / 1000 " + new Date().getTime() / 1000);
-        System.out.println("new Date().getTime() " + new Date().getTime() );
+        log.debug("===== createCookie start =======");
+
         Cookie token = new Cookie(cookieName,value);
         token.setHttpOnly(true);
         token.setMaxAge( (int) (JwtProperties.ACCESS_TOKEN_EXPIRATION_TIME / 1000L));
         token.setPath("/");
+        token = setSecureWhenIsNotLocalProfile(token);
 
-        System.out.println("token.getMaxAge() = " + token.getMaxAge());
+        log.debug("token.getMaxAge : "+ token.getMaxAge());
         return token;
     }
 
+    private Cookie setSecureWhenIsNotLocalProfile(Cookie token) {
+
+        if(isNotLocalProfile())
+            token.setSecure(true);
+        return token;
+    }
+    private boolean isNotLocalProfile() {
+        return !LOCAL_PROFILE.equals(activeProfile);
+    }
+
     public Cookie getCookie(HttpServletRequest req, String cookieName){
+        log.debug("===== getCookie start ======");
         final Cookie[] cookies = req.getCookies();
 
         if(isEmpty(cookies))

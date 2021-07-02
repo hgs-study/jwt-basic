@@ -30,7 +30,7 @@ public class User implements UserDetails {
     private String email;
 
     @Column(length = 200, nullable = false)
-    private String userId;
+    private String userKey;
 
     @Column(length = 200, nullable = false)
     private String password;
@@ -74,7 +74,7 @@ public class User implements UserDetails {
     public Response.Find of(){
         return Response.Find.builder()
                             .email(email)
-                            .userId(userId)
+                            .userId(userKey)
                             .build();
     }
 

@@ -10,7 +10,6 @@ import com.hgstudy.jwtbasic.user.entity.User;
 
 import java.util.Collections;
 import java.util.Date;
-import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -26,11 +25,11 @@ public class UserController {
         System.out.println("new Date() = " + new Date());
         return userRepository.save(User.builder()
                                         .email(signUp.getEmail())
-                                        .userId(UUID.randomUUID().toString())
+                                        .userKey(UUID.randomUUID().toString())
                                         .password(passwordEncoder.encode(signUp.getPassword()))
-                                        .roles(Collections.singletonList("ROLE_ADMIN")) // 최초 가입시 USER 로 설정
+                                        .roles(Collections.singletonList("ROLE_USER")) // 최초 가입시 USER 로 설정
                                         .build())
-                                        .getUserId();
+                                        .getUserKey();
     }
 
     // 회원가입
@@ -38,11 +37,11 @@ public class UserController {
     public String adminJoin(@RequestBody Request.SignUp signUp) {
         return userRepository.save(User.builder()
                                         .email(signUp.getEmail())
-                                        .userId(UUID.randomUUID().toString())
+                                        .userKey(UUID.randomUUID().toString())
                                         .password(passwordEncoder.encode(signUp.getPassword()))
                                         .roles(Collections.singletonList("ROLE_ADMIN")) // 최초 가입시 ADMIN 로 설정
                                         .build())
-                                        .getUserId();
+                                        .getUserKey();
     }
 
 //    @GetMapping("/admin/{test}")
