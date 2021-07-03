@@ -6,6 +6,7 @@ import com.hgstudy.jwtbasic.jwt.JwtAuthenticationFilter;
 import com.hgstudy.jwtbasic.jwt.JwtTokenProvider;
 import com.hgstudy.jwtbasic.redis.RedisUtil;
 import com.hgstudy.jwtbasic.user.application.UserRepository;
+import com.hgstudy.jwtbasic.user.application.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -21,7 +22,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final JwtTokenProvider jwtTokenProvider;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final RedisUtil redisUtil;
     private final CookieUtil cookieUtil;
 
@@ -52,8 +53,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             .antMatchers("/user/**").hasRole("USER").anyRequest()
             .permitAll() // 그외 나머지 요청은 누구나 접근 가능
             .and()
-            .addFilter(new JwtAuthenticationFilter(authenticationManager(),jwtTokenProvider, userRepository,redisUtil,cookieUtil))
-            .addFilterBefore(new CustomAuthenticationFilter(jwtTokenProvider),
+            .addFilter(new JwtAuthenticationFilter(authenticationManager(),jwtTokenProvider, userService,redisUtil,cookieUtil))
+            .addFilterBefore(new CustomAuthenticationFilter(jwtTokenProvider, cookieUtil, userService, redisUtil),
                     UsernamePasswordAuthenticationFilter.class);
         // JwtAuthenticationFilter를 UsernamePasswordAuthenticationFilter 전에 넣는다
     }

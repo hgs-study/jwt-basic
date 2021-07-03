@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hgstudy.jwtbasic.cookie.CookieUtil;
 import com.hgstudy.jwtbasic.redis.RedisUtil;
 import com.hgstudy.jwtbasic.user.application.UserRepository;
+import com.hgstudy.jwtbasic.user.application.UserService;
 import com.hgstudy.jwtbasic.user.entity.User;
 import com.hgstudy.jwtbasic.user.form.UserForm;
 import lombok.RequiredArgsConstructor;
@@ -12,9 +13,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -30,7 +29,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 
 
     private JwtTokenProvider jwtTokenProvider;
-    private UserRepository userRepository;
+    private UserService userService;
     private RedisUtil redisUtil;
     private CookieUtil cookieUtil;
 
@@ -41,12 +40,12 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 
     public JwtAuthenticationFilter(AuthenticationManager authenticationManager,
                                    JwtTokenProvider jwtTokenProvider,
-                                   UserRepository userRepository,
+                                   UserService userService,
                                    RedisUtil redisUtil,
                                    CookieUtil cookieUtil) {
         super(authenticationManager);
         this.jwtTokenProvider = jwtTokenProvider;
-        this.userRepository = userRepository;
+        this.userService = userService;
         this.redisUtil = redisUtil;
         this.cookieUtil = cookieUtil;
     }
@@ -80,23 +79,22 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                                             Authentication authResult) throws IOException, ServletException {
         log.debug("==== successfulAuthentication start ====");
         String email = ((User)authResult.getPrincipal()).getEmail();
-        User member = userRepository.findByEmail(email)
-                                    .orElseThrow(() -> new IllegalArgumentException("가입되지 않은 E-MAIL 입니다."));
+        User member = userService.findByEmail(email);
 
-        final String accessToken = jwtTokenProvider.createToken(member.getUserId(), member.getRoles(), ACCESS_TOKEN_EXPIRATION_TIME);
+        final String accessToken = jwtTokenProvider.createToken(member.getUserKey(), member.getRoles(), ACCESS_TOKEN_EXPIRATION_TIME);
         System.out.println("JwtProperties.REFRESH_TOKEN_EXPIRATION_TIME = " + REFRESH_TOKEN_EXPIRATION_TIME);
-        final String refreshToken = jwtTokenProvider.createToken(member.getUserId(), member.getRoles(), REFRESH_TOKEN_EXPIRATION_TIME);
+        final String refreshToken = jwtTokenProvider.createToken(member.getUserKey(), member.getRoles(), REFRESH_TOKEN_EXPIRATION_TIME);
 
-        final Cookie accessTokenCookie = cookieUtil.createCookie(ACCESS_TOKEN_NAME, accessToken);
-        final Cookie refreshTokenCookie = cookieUtil.createCookie(REFRESH_TOKEN_NAME, refreshToken);
+        final Cookie accessTokenCookie = cookieUtil.createCookie(ACCESS_TOKEN_NAME, accessToken, ACCESS_TOKEN_EXPIRATION_TIME);
+        final Cookie refreshTokenCookie = cookieUtil.createCookie(REFRESH_TOKEN_NAME, refreshToken, REFRESH_TOKEN_EXPIRATION_TIME);
 
-        redisUtil.setDataExpire(refreshToken, email, JwtProperties.REFRESH_TOKEN_EXPIRATION_TIME);
+        redisUtil.setDataExpire(refreshToken, member.getUserKey() , JwtProperties.REFRESH_TOKEN_EXPIRATION_TIME);
 
         response.addCookie(accessTokenCookie);
         response.addCookie(refreshTokenCookie);
 
         response.addHeader(JwtProperties.RESPONSE_HEADER_NAME,accessToken);
-        response.addHeader("userId", member.getUserId());
+        response.addHeader("userId", member.getUserKey());
     }
 
 }

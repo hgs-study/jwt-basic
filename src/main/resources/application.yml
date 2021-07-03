@@ -1,12 +1,19 @@
+
+spring:
+  profiles:
+    active: local
+
+---
+
+
 server:
   port: 8080
 
-jwt:
-  expiration_time: 86400000 #하루 기준(밀리세컨 x1000)
-  secret: user_token
-
 
 spring:
+  config:
+    activate:
+      on-profile: local
   jpa:
     hibernate:
       ddl-auto: create-drop
@@ -22,8 +29,8 @@ spring:
   cache:
     type: redis
   redis:
-    host: localhost
     port: 6379
+    host: localhost
 
 
 logging:

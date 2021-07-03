@@ -1,7 +1,6 @@
 package com.hgstudy.jwtbasic.jwt;
 
 import com.hgstudy.jwtbasic.user.application.UserService;
-import com.hgstudy.jwtbasic.user.entity.User;
 import io.jsonwebtoken.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,15 +32,12 @@ public class JwtTokenProvider {
     }
 
     // JWT 토큰 생성
-    public String createToken(String userId, List<String> roles, long expireTime) {
+    public String createToken(String userKey, List<String> roles, long expireTime) {
         log.debug("=========createToken start ======");
-        Claims claims = Jwts.claims().setSubject(userId); // JWT payload 에 저장되는 정보단위
+        Claims claims = Jwts.claims().setSubject(userKey); // JWT payload 에 저장되는 정보단위
         claims.put("roles", roles); // 정보는 key / value 쌍으로 저장된다.
         Date now = new Date();
-        System.out.println("expireTime = " + expireTime);
-        System.out.println("new Date(System.currentTimeMillis()) 111= " + new Date(System.currentTimeMillis()));
-        System.out.println("new Date(now.getTime() + expireTime) 222= " + new Date(System.currentTimeMillis() + expireTime));
-        System.out.println("new Date(now.getTime() + expireTime) 3333= " + new Date(now.getTime() + expireTime));
+
         return Jwts.builder()
                     .setClaims(claims) // 정보 저장
                     .setIssuedAt(now) // 토큰 발행 시간 정보
@@ -54,13 +50,13 @@ public class JwtTokenProvider {
     // JWT 토큰에서 인증 정보 조회
     public Authentication getAuthentication(String token) {
         log.debug("=========getAuthentication start ======");
-        UserDetails userDetails = userService.findByUserId(this.getUserPk(token)); //UUID
+        UserDetails userDetails = userService.findUserDetailsByUserKey(this.getUserKeyByToken(token)); //UUID
         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
     }
 
     // 토큰에서 회원 정보 추출
-    public String getUserPk(String token) {
-        log.debug("=========getUserPk start ======");
+    public String getUserKeyByToken(String token) {
+        log.debug("=========getUserKeyByToken start ======");
         log.debug("secretKey :"+ secretKey);
         return Jwts.parser()
                     .setSigningKey(secretKey)
@@ -87,10 +83,15 @@ public class JwtTokenProvider {
     public boolean validateToken(String jwtToken) {
         log.debug("=========validateToken start ======");
         try {
-            System.out.println("jwtToken.length() = " + jwtToken.length());
+
             Jws<Claims> claims = Jwts.parser()
                                      .setSigningKey(secretKey)
                                      .parseClaimsJws(jwtToken);
+
+            log.debug("claims.getBody().getExpiration() :"+ claims.getBody().getExpiration());
+            log.debug("new Date() :"+ new Date());
+            log.debug("claims.getBody().getExpiration().before(new Date() :"+ claims.getBody().getExpiration().before(new Date()));
+            log.debug("!claims.getBody().getExpiration().before(new Date() :"+ !claims.getBody().getExpiration().before(new Date()));
 
             return !claims.getBody().getExpiration().before(new Date());
         } catch (SecurityException | MalformedJwtException | SignatureException e) {
